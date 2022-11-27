@@ -1,5 +1,6 @@
 class ToysController < ApplicationController
   wrap_parameters format: []
+  rescue_from ActiveRecord::RecordInvalid, with: :render_resource_not_found
 
   def index
     toys = Toy.all
@@ -12,12 +13,13 @@ class ToysController < ApplicationController
   end
 
   def update
-    toy = Toy.find_by(id: params[:id])
+    toy = find_toy
     toy.update(toy_params)
+    render json: toy, status: :accepted
   end
 
   def destroy
-    toy = Toy.find_by(id: params[:id])
+    toy = find_toy
     toy.destroy
     head :no_content
   end
@@ -26,6 +28,14 @@ class ToysController < ApplicationController
   
   def toy_params
     params.permit(:name, :image, :likes)
+  end
+  
+  def render_resource_not_found
+    render json: {error: "Toy not Found" }, status: :not_found    
+  end
+
+  def find_toy
+    Toy.find(params[:id])
   end
 
 end
